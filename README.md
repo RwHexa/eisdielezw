@@ -1,4 +1,5 @@
-# Eisdiele Kasse San Remo
+# Eisdiele Kasse San Remo --> erstellt von ![Lokales Bild](logorw96.png)
+
 
 Browser-basierte Touch-Kasse für die Eisdiele San Remo, geschrieben in
 Delphi 12.1 mit TMS Web Core (Trial v2.4.6.1, kompiliert mit pas2js 2.3.1).
