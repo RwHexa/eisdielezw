@@ -14,7 +14,7 @@ touch-optimiert und wird über GitHub Pages ausgeliefert.
 
 Repository: `https://github.com/rwhexa/eisdielerw`
 
-## Funktionsumfang (aktueller Stand)
+## Funktionsumfang (aktueller Stand am 14 Mai 2026)
 
 - **Tisch-Verwaltung** für Tisch 1–8, Theke und Mitnahme
 - **Eigener Warenkorb pro Tisch**, der beim Tischwechsel automatisch
