@@ -37,7 +37,7 @@ button { font-family: inherit; cursor: pointer; }
 .tbtn { min-width: 86px; padding: 8px 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; font-size: 12px; white-space: pre-line; text-align: center; }
 .tbtn.busy { background: var(--accent-bg) !important; border-color: var(--accent) !important; color: var(--accent) !important; font-weight: 500 !important; }
 .tbtn.on { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
-.main { display: grid; grid-template-columns: 1fr 320px; gap: 10px; flex: 1; overflow: hidden; }
+.main { display: grid; grid-template-columns: 1fr 260px; gap: 10px; flex: 1; overflow: hidden; }
 .left { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .cats { display: flex; gap: 6px; flex-wrap: wrap; }
 .cat-btn { border: 1px solid var(--border); background: var(--surface); padding: 9px 16px; font-size: 14px; border-radius: 10px; color: var(--muted); }
@@ -60,7 +60,7 @@ button { font-family: inherit; cursor: pointer; }
 .totals .val { font-variant-numeric: tabular-nums; }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
 .act { padding: 13px 8px; font-size: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
-.act.pay { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; grid-column: span 2 !important; font-weight: 500 !important; }
+.act.pay { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; font-weight: 500 !important; }
 .act.cancel { color: var(--danger) !important; border-color: var(--danger) !important; }
 
 /* TMS Inline-Styles ueberschreiben (TWebPanel rendert als span mit width/height inline) */
@@ -71,7 +71,7 @@ button { font-family: inherit; cursor: pointer; }
 .kasse-root { display: flex !important; flex-direction: column !important; height: 100vh !important; padding: 10px !important; gap: 8px !important; }
 .topbar { display: flex !important; align-items: center !important; gap: 12px !important; padding: 12px 16px !important; background: var(--surface) !important; border-radius: 12px !important; }
 .tables { display: flex !important; gap: 6px !important; overflow-x: auto !important; padding: 6px 2px !important; }
-.main { display: grid !important; grid-template-columns: 1fr 320px !important; gap: 10px !important; flex: 1 !important; overflow: hidden !important; }
+.main { display: grid !important; grid-template-columns: 1fr 260px !important; gap: 10px !important; flex: 1 !important; overflow: hidden !important; }
 .left { display: flex !important; flex-direction: column !important; gap: 10px !important; min-width: 0 !important; }
 .cats { display: flex !important; gap: 6px !important; flex-wrap: wrap !important; }
 .tiles { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; gap: 8px !important; overflow-y: auto !important; align-content: start !important; flex: 1 !important; }
@@ -89,7 +89,6 @@ button { font-family: inherit; cursor: pointer; }
 /* Buttons und Tiles auch */
 .tbtn, .cat-btn, .mode-btn, .tile, .act, .rm { width: auto !important; height: auto !important; display: inline-block !important; }
 .tile { display: inline-block !important; min-height: 92px !important; padding: 12px 6px !important; }
-.act.pay { grid-column: span 2 !important; }
 .shop, .active-table, .cart-header, .empty, .qty, .nm, .pr, .val { width: auto !important; height: auto !important; }
 
 /* TMS injiziert anonyme <div>-Wrapper zwischen Panel-spans und ihren Kindern.
