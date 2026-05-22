@@ -2,7 +2,7 @@
   "artikel": [
     { "id": 1,  "kategorie": "Eis",     "name": "Vanille",       "preis": 1.50, "icon": "🍦" },
     { "id": 2,  "kategorie": "Eis",     "name": "Schoko",        "preis": 1.50, "icon": "🍫" },
-    { "id": 3,  "kategorie": "Eis",     "name": "Erdbeere",      "preis": 1.50, "icon": "🍓" },
+    { "id": 3,  "kategorie": "Eis",     "name": "Erdbeere",      "preis": 1.80, "icon": "🍓" },
     { "id": 4,  "kategorie": "Eis",     "name": "Pistazie",      "preis": 1.70, "icon": "🌰" },
     { "id": 5,  "kategorie": "Eis",     "name": "Stracciatella", "preis": 1.50, "icon": "🍨" },
     { "id": 6,  "kategorie": "Eis",     "name": "Zitrone",       "preis": 1.50, "icon": "🍋" },
