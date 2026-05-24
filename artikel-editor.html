@@ -573,6 +573,15 @@
       return btoa(bin);
     }
 
+    // Umgekehrt: Base64 -> UTF-8 String (GitHub-API Content-Feld)
+    function base64ToUtf8(b64) {
+      const clean = b64.replace(/\s/g, '');         // GitHub-Antwort enthaelt Zeilenumbrueche
+      const binary = atob(clean);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder('utf-8').decode(bytes);
+    }
+
     async function githubGetSha(cfg) {
       const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}?ref=${encodeURIComponent(cfg.branch)}`;
       const res = await fetch(url, {
@@ -841,6 +850,46 @@
         showToast(`Backup: ${name}`, 'success');
       }
 
+      async function loadFromGitHub() {
+        if (dirty) {
+          if (!confirm('Es gibt ungespeicherte Aenderungen. Wirklich von GitHub neu laden und ueberschreiben?')) return;
+        }
+        setGhSaving(true);
+        try {
+          const url = `https://api.github.com/repos/${ghCfg.owner}/${ghCfg.repo}/contents/${encodeURIComponent(ghCfg.path)}?ref=${encodeURIComponent(ghCfg.branch)}`;
+          const headers = {
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+          };
+          // Token ist bei Public-Repos fuer GET optional, aber wenn vorhanden nutzen
+          if (ghCfg.token) headers['Authorization'] = `Bearer ${ghCfg.token}`;
+
+          const res = await fetch(url, { headers });
+          if (!res.ok) {
+            if (res.status === 404) throw new Error('Datei nicht gefunden - Repo/Pfad pruefen');
+            if (res.status === 401) throw new Error('Token ungueltig oder abgelaufen');
+            if (res.status === 403) throw new Error('Rate-Limit erreicht oder keine Berechtigung');
+            throw new Error(`HTTP ${res.status}`);
+          }
+          const data = await res.json();
+          if (!data.content) throw new Error('GitHub-Antwort ohne Inhalt');
+
+          const text = base64ToUtf8(data.content);
+          const parsed = JSON.parse(text);
+          if (!parsed.artikel || !Array.isArray(parsed.artikel)) {
+            throw new Error('JSON enthaelt kein artikel-Array');
+          }
+          setItems(parsed.artikel);
+          setFileName(ghCfg.path);
+          setDirty(false);
+          showToast(`${parsed.artikel.length} Artikel von GitHub geladen`, 'success');
+        } catch (e) {
+          showToast(`Laden fehlgeschlagen: ${String(e.message || e).slice(0, 80)}`, 'error');
+        } finally {
+          setGhSaving(false);
+        }
+      }
+
       async function saveToGitHub() {
         if (items.length === 0) { showToast('Keine Artikel zum Speichern', 'error'); return; }
         if (!ghCfg.token) {
@@ -973,8 +1022,17 @@
                   e.target.value = '';
                 }}
               />
-              <button className="btn btn-ghost" onClick={() => fileRef.current.click()} title="Strg+O">
+              <button className="btn btn-ghost" onClick={() => fileRef.current.click()} title="Strg+O - Lokale Datei oeffnen">
                 ↑ Laden
+              </button>
+              <button
+                className="btn btn-github"
+                onClick={loadFromGitHub}
+                disabled={ghSaving}
+                title="Aktuelle produkte.json direkt aus dem GitHub-Repo holen"
+              >
+                <span className={`gh-status-dot ${ghCfg.token ? 'ready' : 'unset'}`}></span>
+                {ghSaving ? '… lade' : '↓ GitHub'}
               </button>
               <button className="btn btn-ghost" onClick={saveBackup} title="Speichern mit Zeitstempel">
                 ⎘ Backup
