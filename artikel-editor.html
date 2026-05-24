@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sortiment · Artikel-Editor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --bg-card: #ffffff;
+      --bg-soft: #f3ede4;
+      --ink: #2a1d12;
+      --ink-soft: #6b5a4a;
+      --ink-faint: #a89884;
+      --line: #e8dfd0;
+      --line-soft: #f0e9dd;
+      --accent: #c4501f;
+      --accent-soft: #f4d9c8;
+      --danger: #b53d3d;
+      --shadow-sm: 0 1px 2px rgba(42, 29, 18, 0.04);
+      --shadow-md: 0 4px 16px rgba(42, 29, 18, 0.06);
+      --shadow-lg: 0 24px 60px rgba(42, 29, 18, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { max-width: 1280px; margin: 0 auto; padding: 32px 32px 96px; }
+
+    /* ---------- Header ---------- */
+    .header {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--line);
+      gap: 16px; flex-wrap: wrap;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-logo {
+      width: 56px; height: 56px; flex: 0 0 56px;
+      background-size: contain; background-position: center;
+      background-repeat: no-repeat;
+    }
+    .brand-eyebrow {
+      font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 500; margin-bottom: 4px;
+    }
+    .brand-eyebrow .dirty { color: var(--accent); font-weight: 700; }
+    .brand-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 44px; line-height: 1; letter-spacing: -0.02em; font-weight: 400; margin: 0;
+    }
+    .brand-title em { font-style: italic; color: var(--accent); font-size: 0.7em; vertical-align: 0.1em; }
+    .toolbar { display: flex; gap: 8px; align-items: center; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 14px; border-radius: 8px;
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 120ms;
+      border: 1px solid transparent; background: transparent; color: var(--ink);
+    }
+    .btn:hover { background: var(--bg-soft); }
+    .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+    .btn-primary:hover { background: #1a120a; }
+    .btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-accent:hover { background: #a8421a; }
+    .btn-ghost { background: transparent; border-color: var(--line); }
+    .btn-ghost:hover { border-color: var(--ink); background: transparent; }
+
+    /* ---------- GitHub Save Button ---------- */
+    .btn-github { background: #24292f; color: white; border-color: #24292f; }
+    .btn-github:hover:not(:disabled) { background: #1c2025; }
+    .btn-github:disabled { opacity: 0.5; cursor: not-allowed; }
+    .gh-status-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      margin-right: 6px; vertical-align: middle;
+    }
+    .gh-status-dot.ready { background: #2ea043; }
+    .gh-status-dot.unset { background: var(--ink-faint); }
+
+    /* ---------- Modal ---------- */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(42, 29, 18, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 24px;
+    }
+    .modal {
+      background: var(--bg-card); border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      width: 100%; max-width: 520px; max-height: 90vh; overflow: auto;
+      padding: 28px;
+    }
+    .modal h2 {
+      margin: 0 0 6px; font-family: 'Instrument Serif', serif;
+      font-size: 28px; font-weight: 400;
+    }
+    .modal-sub {
+      color: var(--ink-soft); font-size: 13px; margin-bottom: 22px;
+      line-height: 1.55;
+    }
+    .modal-sub code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      background: var(--bg-soft); padding: 1px 6px; border-radius: 4px;
+    }
+    .modal-field { margin-bottom: 14px; }
+    .modal-field label {
+      display: block; font-size: 12px; font-weight: 500;
+      color: var(--ink-soft); margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .modal-field input {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+      font-size: 13px; background: var(--bg-card); color: var(--ink);
+    }
+    .modal-field input:focus {
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .modal-field .hint {
+      font-size: 11px; color: var(--ink-faint); margin-top: 4px;
+    }
+    .modal-actions {
+      display: flex; justify-content: space-between; gap: 8px;
+      margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line);
+    }
+    .modal-actions-left { display: flex; gap: 8px; }
+    .modal-actions-right { display: flex; gap: 8px; }
+    .token-help {
+      background: var(--bg-soft); border-radius: 8px; padding: 14px;
+      font-size: 12px; line-height: 1.55; margin-bottom: 18px;
+      color: var(--ink-soft);
+    }
+    .token-help b { color: var(--ink); }
+    .token-help a { color: var(--accent); text-decoration: none; }
+    .token-help a:hover { text-decoration: underline; }
+    .token-help ol { margin: 6px 0 0 0; padding-left: 18px; }
+    .token-help li { margin-bottom: 2px; }
+
+    /* ---------- Stats ---------- */
+    .stats { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat {
+      flex: 1; min-width: 180px; padding: 16px 20px;
+      background: var(--bg-card); border: 1px solid var(--line); border-radius: 10px;
+    }
+    .stat-label {
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint); margin-bottom: 6px; font-weight: 500;
+    }
+    .stat-value { font-family: 'Instrument Serif', serif; font-size: 32px; line-height: 1; }
+    .stat-value .currency { color: var(--ink-faint); font-size: 0.6em; margin-left: 4px; }
+
+    /* ---------- Filters ---------- */
+    .filters { display: flex; gap: 16px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    .tabs { display: flex; gap: 2px; padding: 4px; background: var(--bg-soft); border-radius: 10px; }
+    .tab {
+      padding: 7px 14px; border-radius: 7px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      color: var(--ink-soft); border: none; background: transparent;
+      font-family: inherit; transition: all 120ms;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active { background: var(--bg-card); color: var(--ink); box-shadow: var(--shadow-sm); }
+    .tab-count { margin-left: 4px; font-size: 11px; color: var(--ink-faint); }
+    .tab.active .tab-count { color: var(--accent); }
+
+    .search { margin-left: auto; position: relative; }
+    .search input {
+      padding: 9px 12px 9px 34px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--bg-card); font-family: inherit; font-size: 13px; width: 220px;
+      transition: all 120ms; color: var(--ink);
+    }
+    .search input:focus { outline: none; border-color: var(--ink); }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--ink-faint); pointer-events: none; font-size: 16px;
+    }
+
+    /* ---------- Table ---------- */
+    .table-wrap {
+      background: var(--bg-card); border: 1px solid var(--line);
+      border-radius: 12px; overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 12px 16px;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 500;
+      border-bottom: 1px solid var(--line); background: var(--bg-soft);
+    }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--ink); }
+    .sort-indicator { margin-left: 4px; opacity: 0.4; }
+    th.active-sort .sort-indicator { opacity: 1; color: var(--accent); }
+    td { padding: 4px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr.row { transition: background 120ms; }
+    tr.row:hover { background: var(--bg-soft); }
+
+    .cell-edit {
+      cursor: text; padding: 8px 10px; margin: -8px -10px;
+      border-radius: 6px; display: block; min-height: 32px; line-height: 32px;
+    }
+    .cell-edit:hover { background: var(--accent-soft); }
+    .cell-icon { font-size: 22px; line-height: 1; text-align: center; padding: 8px 4px; margin: -8px -4px; }
+    .cell-price { font-family: 'JetBrains Mono', monospace; font-weight: 500; text-align: right; }
+    .cell-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-faint); }
+
+    .badge {
+      display: inline-flex; align-items: center; padding: 3px 9px;
+      border-radius: 999px; font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+    }
+    .badge-Eis      { background: #fde8d3; color: #8a4b1c; }
+    .badge-Becher   { background: #fce3e3; color: #963131; }
+    .badge-Waffel   { background: #f5e6cf; color: #6b4920; }
+    .badge-Getränk  { background: #dde9e5; color: #2c5a4a; }
+
+    .row-actions { display: flex; gap: 4px; justify-content: flex-end; opacity: 0; transition: opacity 120ms; }
+    tr.row:hover .row-actions { opacity: 1; }
+    .icon-btn {
+      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: 6px; cursor: pointer;
+      color: var(--ink-soft); font-size: 14px; font-family: inherit;
+    }
+    .icon-btn:hover { background: var(--line); color: var(--ink); }
+    .icon-btn.danger:hover { background: var(--danger); color: white; }
+    .icon-btn.success:hover { background: #4a7c3a; color: white; }
+
+    /* ---------- Inline edit ---------- */
+    .inline-input, .inline-select {
+      width: 100%; padding: 8px 10px; margin: -8px -10px;
+      border: 2px solid var(--accent); border-radius: 6px;
+      font-family: inherit; font-size: inherit; background: white; color: var(--ink);
+    }
+    .inline-input.mono { font-family: 'JetBrains Mono', monospace; }
+    .inline-input:focus, .inline-select:focus { outline: none; }
+
+    /* ---------- Empty / drag / toast ---------- */
+    .empty { padding: 60px 20px; text-align: center; color: var(--ink-soft); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-family: 'Instrument Serif', serif; font-size: 24px; margin-bottom: 8px; color: var(--ink); }
+
+    .drag-overlay {
+      position: fixed; inset: 0; background: rgba(196, 80, 31, 0.92);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; backdrop-filter: blur(4px); pointer-events: none;
+    }
+    .drag-overlay-inner {
+      color: white; text-align: center; font-family: 'Instrument Serif', serif; font-size: 56px;
+      border: 2px dashed rgba(255,255,255,0.4); padding: 60px 100px; border-radius: 24px;
+    }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: var(--bg);
+      padding: 12px 20px; border-radius: 10px; font-size: 13px;
+      box-shadow: var(--shadow-lg); z-index: 100;
+      animation: toast-in 200ms ease-out;
+    }
+    .toast.error { background: var(--danger); }
+    .toast.success { background: #2d4d27; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to   { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    tr.add-row { background: var(--accent-soft) !important; }
+    tr.add-row td { padding: 10px 16px; }
+
+    /* ---------- Emoji-Picker ---------- */
+    .icon-trigger {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px;
+      background: var(--bg-card); border: 2px dashed var(--accent);
+      border-radius: 8px; cursor: pointer;
+      font-size: 22px; line-height: 1;
+      transition: all 120ms;
+    }
+    .icon-trigger:hover {
+      background: var(--accent-soft); border-style: solid;
+      transform: scale(1.05);
+    }
+    .icon-trigger.empty { color: var(--ink-faint); font-size: 16px; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+
+    .emoji-picker {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      width: 360px; max-height: 420px; overflow-y: auto;
+      padding: 12px;
+      animation: pop-in 140ms ease-out;
+    }
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .emoji-picker-header {
+      display: flex; gap: 6px; align-items: center;
+      padding-bottom: 10px; margin-bottom: 8px;
+      border-bottom: 1px solid var(--line-soft);
+      position: sticky; top: -12px;
+      background: var(--bg-card);
+      padding-top: 0; margin-top: 0;
+      z-index: 1;
+    }
+    .emoji-picker-custom {
+      flex: 1;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-family: inherit; font-size: 13px;
+      background: var(--bg);
+    }
+    .emoji-picker-custom:focus { outline: none; border-color: var(--accent); }
+    .emoji-picker-apply {
+      width: 32px; height: 32px;
+      border: none; background: var(--accent); color: white;
+      border-radius: 6px; cursor: pointer; font-size: 14px; font-family: inherit;
+    }
+    .emoji-picker-apply:disabled { background: var(--line); cursor: not-allowed; }
+    .emoji-group { margin-bottom: 10px; }
+    .emoji-group:last-child { margin-bottom: 0; }
+    .emoji-group-label {
+      font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 500; margin-bottom: 4px; padding-left: 2px;
+    }
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 2px;
+    }
+    .emoji-btn {
+      width: 100%; aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: 6px;
+      cursor: pointer; font-size: 20px; line-height: 1;
+      transition: background 100ms;
+      padding: 0;
+    }
+    .emoji-btn:hover { background: var(--bg-soft); transform: scale(1.15); }
+    .emoji-btn.active { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+
+    .picker-portal {
+      position: fixed; z-index: 200;
+    }
+
+    .hint {
+      font-size: 12px; color: var(--ink-faint); display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .hint kbd {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      background: var(--bg-card); padding: 2px 6px; border-radius: 4px;
+      border: 1px solid var(--line); box-shadow: 0 1px 0 var(--line);
+    }
+
+    .hidden { display: none !important; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 720px) {
+      .app { padding: 16px 16px 80px; }
+      .brand-title { font-size: 32px; }
+      .stats { gap: 8px; }
+      .stat { padding: 12px; min-width: 140px; }
+      .stat-value { font-size: 24px; }
+      .search input { width: 100%; }
+      .search { width: 100%; margin-left: 0; }
+      th, td { padding: 8px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState, useMemo, useRef, useEffect, useCallback } = React;
+
+    /* -------- Sample-Daten (werden beim Laden ersetzt) -------- */
+    const SAMPLE = {
+      artikel: [
+        { id: 1,  kategorie: "Eis",     name: "Vanille",       preis: 1.50, icon: "🍦" },
+        { id: 2,  kategorie: "Eis",     name: "Schoko",        preis: 1.50, icon: "🍫" },
+        { id: 3,  kategorie: "Eis",     name: "Erdbeere",      preis: 1.50, icon: "🍓" },
+        { id: 4,  kategorie: "Eis",     name: "Pistazie",      preis: 1.70, icon: "🌰" },
+        { id: 5,  kategorie: "Eis",     name: "Stracciatella", preis: 1.50, icon: "🍨" },
+        { id: 6,  kategorie: "Eis",     name: "Zitrone",       preis: 1.50, icon: "🍋" },
+        { id: 7,  kategorie: "Eis",     name: "Mango",         preis: 1.70, icon: "🥭" },
+        { id: 8,  kategorie: "Eis",     name: "Haselnuss",     preis: 1.50, icon: "🌰" },
+        { id: 10, kategorie: "Becher",  name: "Spaghetti-Eis", preis: 6.50, icon: "🍝" },
+        { id: 11, kategorie: "Becher",  name: "Bananensplit",  preis: 5.90, icon: "🍌" },
+        { id: 12, kategorie: "Becher",  name: "Becher Sahne",  preis: 4.50, icon: "🍨" },
+        { id: 13, kategorie: "Becher",  name: "Heisse Liebe",  preis: 5.50, icon: "❤" },
+        { id: 20, kategorie: "Waffel",  name: "Waffel + Eis",  preis: 4.50, icon: "🧇" },
+        { id: 21, kategorie: "Waffel",  name: "Waffel Sahne",  preis: 3.50, icon: "🧇" },
+        { id: 30, kategorie: "Getränk", name: "Espresso",      preis: 2.20, icon: "☕" },
+        { id: 31, kategorie: "Getränk", name: "Cappuccino",    preis: 3.20, icon: "☕" },
+        { id: 32, kategorie: "Getränk", name: "Wasser",        preis: 2.50, icon: "💧" },
+        { id: 33, kategorie: "Getränk", name: "Cola",          preis: 2.80, icon: "🥤" }
+      ]
+    };
+
+    const KATEGORIEN = ["Eis", "Becher", "Waffel", "Getränk"];
+
+    const EMOJI_GROUPS = {
+      'Eis & Dessert':    ['🍦','🍨','🍧','🍮','🎂','🧁','🍰','🥧','🍪','🍩','🍡','🧊'],
+      'Schoko & Nüsse':   ['🍫','🌰','🥜','🍯'],
+      'Früchte':          ['🍓','🍌','🥭','🍋','🍑','🍒','🍇','🍎','🍏','🍐','🍊','🥥','🍉','🍍','🥝','🫐'],
+      'Getränke':         ['☕','🍵','🥤','🧋','🥛','💧','🧃','🥃','🍹','🍸','🍺','🍷','🍾','🍶'],
+      'Waffel & Gebäck':  ['🧇','🥐','🥖','🍞','🥨','🥞','🍮'],
+      'Deko & Symbole':   ['❤','⭐','✨','🌟','🌈','🎉','🔥','🌸','🌺','💫','🎀','👑']
+    };
+
+    /* -------- Helpers -------- */
+    const fmtPrice = (n) => n.toFixed(2).replace('.', ',');
+    const parsePrice = (s) => {
+      const cleaned = String(s).replace(',', '.').replace(/[^0-9.\-]/g, '');
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
+    };
+
+    function buildJSON(artikel) {
+      const lines = ['{', '  "artikel": ['];
+      artikel.forEach((a, i) => {
+        const name = String(a.name).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        const json = `    { "id": ${a.id}, "kategorie": "${a.kategorie}", "name": "${name}", "preis": ${a.preis.toFixed(2)}, "icon": "${a.icon}" }`;
+        lines.push(json + (i < artikel.length - 1 ? ',' : ''));
+      });
+      lines.push('  ]');
+      lines.push('}');
+      return lines.join('\n');
+    }
+
+    /* ============================ EmojiPicker ============================ */
+    function EmojiPicker({ value, onSelect, onClose, anchorEl }) {
+      const [custom, setCustom] = useState('');
+      const ref = useRef();
+      const [pos, setPos] = useState({ left: -9999, top: -9999 });
+
+      // Position relativ zum Anker berechnen, on-screen halten
+      useEffect(() => {
+        if (!anchorEl) return;
+        const rect = anchorEl.getBoundingClientRect();
+        const pickerW = 360, pickerH = 420, margin = 12;
+        let left = rect.left;
+        let top  = rect.bottom + 8;
+        if (left + pickerW > window.innerWidth - margin)
+          left = window.innerWidth - pickerW - margin;
+        if (left < margin) left = margin;
+        if (top + pickerH > window.innerHeight - margin) {
+          const above = rect.top - pickerH - 8;
+          top = above > margin ? above : Math.max(margin, window.innerHeight - pickerH - margin);
+        }
+        setPos({ left, top });
+      }, [anchorEl]);
+
+      // Outside-Click + Esc + Scroll-Close
+      useEffect(() => {
+        const onDown = (e) => {
+          if (ref.current && !ref.current.contains(e.target)
+              && !(anchorEl && anchorEl.contains(e.target))) {
+            onClose();
+          }
+        };
+        const onEsc = (e) => { if (e.key === 'Escape') onClose(); };
+        const onScroll = (e) => {
+          // Scrollen INNERHALB des Pickers nicht schliessen
+          if (ref.current && ref.current.contains(e.target)) return;
+          onClose();
+        };
+        const t = setTimeout(() => {
+          document.addEventListener('mousedown', onDown);
+          document.addEventListener('keydown', onEsc);
+          window.addEventListener('scroll', onScroll, true);
+        }, 0);
+        return () => {
+          clearTimeout(t);
+          document.removeEventListener('mousedown', onDown);
+          document.removeEventListener('keydown', onEsc);
+          window.removeEventListener('scroll', onScroll, true);
+        };
+      }, [anchorEl, onClose]);
+
+      const apply = () => {
+        const v = custom.trim();
+        if (v) { onSelect(v); onClose(); }
+      };
+
+      return (
+        <div className="picker-portal" style={{ left: pos.left, top: pos.top }}>
+          <div ref={ref} className="emoji-picker">
+            <div className="emoji-picker-header">
+              <input
+                className="emoji-picker-custom"
+                placeholder="eigenes Emoji / Zeichen…"
+                value={custom}
+                onChange={(e) => setCustom(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') apply(); }}
+              />
+              <button className="emoji-picker-apply" onClick={apply} disabled={!custom.trim()} title="Übernehmen">✓</button>
+            </div>
+            {Object.entries(EMOJI_GROUPS).map(([group, emojis]) => (
+              <div key={group} className="emoji-group">
+                <div className="emoji-group-label">{group}</div>
+                <div className="emoji-grid">
+                  {emojis.map(e => (
+                    <button
+                      key={e}
+                      className={`emoji-btn ${value === e ? 'active' : ''}`}
+                      onClick={() => { onSelect(e); onClose(); }}
+                      title={e}
+                    >{e}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* ============================ App ============================ */
+    /* ---------- GitHub-API Integration ---------- */
+    const GH_STORAGE_KEY = 'editor_github_config';
+    const GH_DEFAULTS = {
+      token: '',
+      owner: 'rwhexa',
+      repo: 'eisdielerw',
+      branch: 'main',
+      path: 'produkte.json',
+      authorName: '',
+      authorEmail: ''
+    };
+
+    function loadGhConfig() {
+      try {
+        const raw = localStorage.getItem(GH_STORAGE_KEY);
+        if (!raw) return { ...GH_DEFAULTS };
+        return { ...GH_DEFAULTS, ...JSON.parse(raw) };
+      } catch {
+        return { ...GH_DEFAULTS };
+      }
+    }
+
+    function saveGhConfig(cfg) {
+      try {
+        localStorage.setItem(GH_STORAGE_KEY, JSON.stringify(cfg));
+      } catch {}
+    }
+
+    // UTF-8-sicheres Base64 (wichtig fuer Emojis)
+    function utf8ToBase64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+
+    async function githubGetSha(cfg) {
+      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}?ref=${encodeURIComponent(cfg.branch)}`;
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${cfg.token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+      if (res.status === 404) return null;       // Datei existiert noch nicht
+      if (!res.ok) throw new Error(`GET fehlgeschlagen (${res.status}): ${await res.text()}`);
+      const data = await res.json();
+      return data.sha;
+    }
+
+    async function githubPutContent(cfg, content, sha) {
+      const url = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${encodeURIComponent(cfg.path)}`;
+      const body = {
+        message: `Artikelliste aktualisiert via Editor (${new Date().toISOString().slice(0, 16).replace('T', ' ')})`,
+        content: utf8ToBase64(content),
+        branch: cfg.branch
+      };
+      if (sha) body.sha = sha;
+      if (cfg.authorName && cfg.authorEmail) {
+        body.committer = { name: cfg.authorName, email: cfg.authorEmail };
+      }
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${cfg.token}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const errTxt = await res.text();
+        throw new Error(`PUT fehlgeschlagen (${res.status}): ${errTxt}`);
+      }
+      return res.json();
+    }
+
+    function GitHubSettingsModal({ initialCfg, onSave, onClose, onTest }) {
+      const [cfg, setCfg] = useState(initialCfg);
+      const [testing, setTesting] = useState(false);
+      const [testResult, setTestResult] = useState(null);
+      const upd = (k, v) => setCfg({ ...cfg, [k]: v });
+
+      async function handleTest() {
+        if (!cfg.token) { setTestResult({ ok: false, msg: 'Token fehlt' }); return; }
+        setTesting(true);
+        setTestResult(null);
+        try {
+          await githubGetSha(cfg);   // wirft bei Fehler
+          setTestResult({ ok: true, msg: 'Verbindung OK, Datei gefunden' });
+        } catch (e) {
+          // 404 ist ok (Datei existiert noch nicht), wenn Repo erreichbar
+          const m = String(e.message || e);
+          if (m.includes('404')) setTestResult({ ok: true, msg: 'Verbindung OK (Datei wird beim ersten Speichern angelegt)' });
+          else setTestResult({ ok: false, msg: m });
+        }
+        setTesting(false);
+      }
+
+      return (
+        <div className="modal-backdrop" onClick={onClose}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>GitHub-Einstellungen</h2>
+            <div className="modal-sub">
+              Damit der Editor direkt nach GitHub speichern kann, brauchen wir
+              einen Personal Access Token. Der Token wird nur lokal im Browser
+              gespeichert (<code>localStorage</code>).
+            </div>
+
+            <div className="token-help">
+              <b>Token erzeugen (einmalig):</b>
+              <ol>
+                <li>Auf GitHub einloggen → Profilbild → <b>Settings</b></li>
+                <li>Links unten: <b>Developer settings</b></li>
+                <li><b>Personal access tokens → Fine-grained tokens</b></li>
+                <li><b>Generate new token</b> · Name z.B. „Artikel-Editor”</li>
+                <li><b>Repository access:</b> Only select repositories → <code>{cfg.repo}</code></li>
+                <li><b>Permissions → Repository permissions → Contents:</b> Read and write</li>
+                <li>Token erzeugen, kopieren, unten einfügen</li>
+              </ol>
+            </div>
+
+            <div className="modal-field">
+              <label>Personal Access Token</label>
+              <input
+                type="password" value={cfg.token}
+                placeholder="github_pat_..."
+                onChange={(e) => upd('token', e.target.value.trim())}
+              />
+              <div className="hint">Wird im Browser gespeichert. Bei Verlust des Tablets in GitHub widerrufen.</div>
+            </div>
+
+            <div className="modal-field">
+              <label>Repository-Eigentümer</label>
+              <input type="text" value={cfg.owner} onChange={(e) => upd('owner', e.target.value.trim())} />
+            </div>
+
+            <div className="modal-field">
+              <label>Repository-Name</label>
+              <input type="text" value={cfg.repo} onChange={(e) => upd('repo', e.target.value.trim())} />
+            </div>
+
+            <div className="modal-field">
+              <label>Branch</label>
+              <input type="text" value={cfg.branch} onChange={(e) => upd('branch', e.target.value.trim())} />
+            </div>
+
+            <div className="modal-field">
+              <label>Pfad im Repo</label>
+              <input type="text" value={cfg.path} onChange={(e) => upd('path', e.target.value.trim())} />
+              <div className="hint">Zur Zeit: <code>{cfg.path}</code></div>
+            </div>
+
+            {testResult && (
+              <div className="token-help" style={{
+                background: testResult.ok ? '#e6f4ea' : '#fbe9e9',
+                color: testResult.ok ? '#1e5631' : '#9a2a2a'
+              }}>
+                {testResult.ok ? '✓ ' : '✕ '}{testResult.msg}
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <div className="modal-actions-left">
+                <button className="btn btn-ghost" onClick={handleTest} disabled={testing}>
+                  {testing ? '…' : 'Verbindung testen'}
+                </button>
+              </div>
+              <div className="modal-actions-right">
+                <button className="btn btn-ghost" onClick={onClose}>Abbrechen</button>
+                <button className="btn btn-primary" onClick={() => onSave(cfg)}>Speichern</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [items, setItems] = useState(SAMPLE.artikel);
+      const [filterKat, setFilterKat] = useState('Alle');
+      const [search, setSearch] = useState('');
+      const [editing, setEditing] = useState(null);
+      const [sortBy, setSortBy] = useState('id');
+      const [sortDir, setSortDir] = useState('asc');
+      const [toast, setToast] = useState(null);
+      const [dragging, setDragging] = useState(false);
+      const [adding, setAdding] = useState(false);
+      const [newItem, setNewItem] = useState({ kategorie: 'Eis', name: '', preis: '', icon: '' });
+      const [picker, setPicker] = useState(null); // { kind:'new'|'edit', id?, anchorEl }
+      const [dirty, setDirty] = useState(false);
+      const [fileName, setFileName] = useState('produkte.json');
+      const [showSettings, setShowSettings] = useState(false);
+      const [ghCfg, setGhCfg] = useState(() => loadGhConfig());
+      const [ghSaving, setGhSaving] = useState(false);
+      const fileRef = useRef();
+
+      const showToast = useCallback((msg, kind = '') => {
+        setToast({ msg, kind });
+        setTimeout(() => setToast(null), 2500);
+      }, []);
+
+      /* ---------- Drag & Drop fuer Dateien ---------- */
+      useEffect(() => {
+        let depth = 0;
+        const onEnter = (e) => { e.preventDefault(); depth++; if (e.dataTransfer.types.includes('Files')) setDragging(true); };
+        const onLeave = (e) => { e.preventDefault(); depth--; if (depth <= 0) { depth = 0; setDragging(false); } };
+        const onOver  = (e) => { e.preventDefault(); };
+        const onDrop  = (e) => {
+          e.preventDefault(); depth = 0; setDragging(false);
+          const file = e.dataTransfer.files[0];
+          if (file) loadFile(file);
+        };
+        window.addEventListener('dragenter', onEnter);
+        window.addEventListener('dragleave', onLeave);
+        window.addEventListener('dragover',  onOver);
+        window.addEventListener('drop',      onDrop);
+        return () => {
+          window.removeEventListener('dragenter', onEnter);
+          window.removeEventListener('dragleave', onLeave);
+          window.removeEventListener('dragover',  onOver);
+          window.removeEventListener('drop',      onDrop);
+        };
+      }, []);
+
+      /* ---------- Warnung bei ungespeichert ---------- */
+      useEffect(() => {
+        if (!dirty) return;
+        const h = (e) => { e.preventDefault(); e.returnValue = ''; };
+        window.addEventListener('beforeunload', h);
+        return () => window.removeEventListener('beforeunload', h);
+      }, [dirty]);
+
+      /* ---------- Tastenkuerzel ---------- */
+      useEffect(() => {
+        const onKey = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault(); saveFile();
+          } else if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+            e.preventDefault(); fileRef.current?.click();
+          } else if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault(); setAdding(true);
+          }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      });
+
+      /* ---------- File I/O ---------- */
+      function loadFile(file) {
+        if (!file.name.toLowerCase().endsWith('.json')) {
+          showToast('Bitte eine .json-Datei wählen', 'error'); return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data.artikel)) throw new Error('Schlüssel "artikel" fehlt');
+            const cleaned = data.artikel.map(a => ({
+              id: Number(a.id) || 0,
+              kategorie: String(a.kategorie || ''),
+              name: String(a.name || ''),
+              preis: typeof a.preis === 'number' ? a.preis : parsePrice(a.preis),
+              icon: String(a.icon || '•')
+            }));
+            setItems(cleaned);
+            setFileName(file.name);
+            setDirty(false);
+            setEditing(null);
+            showToast(`${cleaned.length} Artikel aus ${file.name} geladen`, 'success');
+          } catch (err) {
+            showToast('Fehler: ' + err.message, 'error');
+          }
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+
+      function download(content, name) {
+        const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function saveFile() {
+        if (items.length === 0) { showToast('Keine Artikel zum Speichern', 'error'); return; }
+        download(buildJSON(items), fileName);
+        setDirty(false);
+        showToast(`${fileName} heruntergeladen`, 'success');
+      }
+
+      function saveBackup() {
+        if (items.length === 0) { showToast('Keine Artikel zum Speichern', 'error'); return; }
+        const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        const base = fileName.replace(/\.json$/i, '');
+        const name = `${base}_${ts}.json`;
+        download(buildJSON(items), name);
+        showToast(`Backup: ${name}`, 'success');
+      }
+
+      async function saveToGitHub() {
+        if (items.length === 0) { showToast('Keine Artikel zum Speichern', 'error'); return; }
+        if (!ghCfg.token) {
+          showToast('Bitte zuerst Token in den Einstellungen hinterlegen', 'error');
+          setShowSettings(true);
+          return;
+        }
+        setGhSaving(true);
+        try {
+          const sha = await githubGetSha(ghCfg);  // null wenn Datei neu
+          await githubPutContent(ghCfg, buildJSON(items), sha);
+          setDirty(false);
+          showToast(`Auf GitHub gespeichert: ${ghCfg.owner}/${ghCfg.repo}/${ghCfg.path}`, 'success');
+        } catch (e) {
+          const msg = String(e.message || e);
+          if (msg.includes('401')) {
+            showToast('Token ungueltig oder abgelaufen', 'error');
+          } else if (msg.includes('403')) {
+            showToast('Keine Berechtigung - Token-Scope pruefen (Contents: write)', 'error');
+          } else if (msg.includes('404')) {
+            showToast('Repository oder Pfad nicht gefunden - Einstellungen pruefen', 'error');
+          } else if (msg.includes('409')) {
+            showToast('Konflikt - jemand anderes hat die Datei gerade geaendert. Bitte neu laden.', 'error');
+          } else {
+            showToast(`Fehler: ${msg.slice(0, 90)}`, 'error');
+          }
+        } finally {
+          setGhSaving(false);
+        }
+      }
+
+      /* ---------- CRUD ---------- */
+      const nextId = () => (items.length ? Math.max(...items.map(i => i.id)) + 1 : 1);
+
+      function updateItem(id, field, value) {
+        setItems(items.map(i => {
+          if (i.id !== id) return i;
+          let v = value;
+          if (field === 'preis') v = parsePrice(value);
+          else if (field === 'id') v = parseInt(value, 10) || i.id;
+          return { ...i, [field]: v };
+        }));
+        setDirty(true);
+      }
+
+      function deleteItem(id) {
+        const item = items.find(i => i.id === id);
+        if (!confirm(`"${item?.name}" wirklich löschen?`)) return;
+        setItems(items.filter(i => i.id !== id));
+        setDirty(true);
+        showToast('Artikel gelöscht', 'success');
+      }
+
+      function commitNew() {
+        if (!newItem.name.trim()) { showToast('Name fehlt', 'error'); return; }
+        const item = {
+          id: nextId(),
+          kategorie: newItem.kategorie,
+          name: newItem.name.trim(),
+          preis: parsePrice(newItem.preis || '0'),
+          icon: newItem.icon || '•'
+        };
+        setItems([...items, item]);
+        setAdding(false);
+        setNewItem({ kategorie: 'Eis', name: '', preis: '', icon: '' });
+        setDirty(true);
+        showToast(`"${item.name}" hinzugefügt`, 'success');
+      }
+
+      function toggleSort(field) {
+        if (sortBy === field) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+        else { setSortBy(field); setSortDir('asc'); }
+      }
+
+      /* ---------- Derived ---------- */
+      const view = useMemo(() => {
+        let v = items;
+        if (filterKat !== 'Alle') v = v.filter(i => i.kategorie === filterKat);
+        if (search.trim()) {
+          const s = search.toLowerCase();
+          v = v.filter(i =>
+            i.name.toLowerCase().includes(s) ||
+            String(i.id).includes(s) ||
+            i.kategorie.toLowerCase().includes(s)
+          );
+        }
+        const dir = sortDir === 'asc' ? 1 : -1;
+        return [...v].sort((a, b) => {
+          const x = a[sortBy], y = b[sortBy];
+          if (typeof x === 'number' && typeof y === 'number') return (x - y) * dir;
+          return String(x).localeCompare(String(y), 'de') * dir;
+        });
+      }, [items, filterKat, search, sortBy, sortDir]);
+
+      const counts = useMemo(() => {
+        const c = { Alle: items.length };
+        KATEGORIEN.forEach(k => { c[k] = items.filter(i => i.kategorie === k).length; });
+        return c;
+      }, [items]);
+
+      const totalValue = useMemo(() => items.reduce((s, i) => s + i.preis, 0), [items]);
+
+      /* ---------- Render ---------- */
+      const sortArrow = (f) => sortBy === f ? (sortDir === 'asc' ? '↑' : '↓') : '↕';
+
+      return (
+        <div className="app">
+          {dragging && (
+            <div className="drag-overlay">
+              <div className="drag-overlay-inner">Datei hier ablegen</div>
+            </div>
+          )}
+
+          <header className="header">
+            <div className="brand">
+              <div className="brand-logo" style={{ backgroundImage: 'url(data:image/png;base64,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)' }}></div>
+              <div>
+                <div className="brand-eyebrow">
+                Sortiment · {fileName}{dirty && <span className="dirty"> · ungespeichert</span>}
+              </div>
+              <h1 className="brand-title">Artikel<em>·</em>Editor</h1>
+              </div>
+            </div>
+            <div className="toolbar">
+              <input
+                ref={fileRef} type="file" accept=".json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files[0]) loadFile(e.target.files[0]);
+                  e.target.value = '';
+                }}
+              />
+              <button className="btn btn-ghost" onClick={() => fileRef.current.click()} title="Strg+O">
+                ↑ Laden
+              </button>
+              <button className="btn btn-ghost" onClick={saveBackup} title="Speichern mit Zeitstempel">
+                ⎘ Backup
+              </button>
+              <button className="btn btn-accent" onClick={saveFile} title="Strg+S">
+                ↓ Speichern
+              </button>
+              <button
+                className="btn btn-github"
+                onClick={saveToGitHub}
+                disabled={ghSaving}
+                title={ghCfg.token ? `Direkt nach ${ghCfg.owner}/${ghCfg.repo} pushen` : 'Token-Setup noetig'}
+              >
+                <span className={`gh-status-dot ${ghCfg.token ? 'ready' : 'unset'}`}></span>
+                {ghSaving ? '… sende' : '☁ GitHub'}
+              </button>
+              <button
+                className="btn btn-ghost"
+                onClick={() => setShowSettings(true)}
+                title="GitHub-Einstellungen"
+              >
+                ⚙
+              </button>
+            </div>
+          </header>
+
+          {showSettings && (
+            <GitHubSettingsModal
+              initialCfg={ghCfg}
+              onSave={(newCfg) => {
+                setGhCfg(newCfg);
+                saveGhConfig(newCfg);
+                setShowSettings(false);
+                showToast('Einstellungen gespeichert', 'success');
+              }}
+              onClose={() => setShowSettings(false)}
+            />
+          )}
+
+          <div className="stats">
+            <div className="stat">
+              <div className="stat-label">Artikel insgesamt</div>
+              <div className="stat-value">{items.length}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Aktive Kategorien</div>
+              <div className="stat-value">
+                {Object.entries(counts).filter(([k, v]) => k !== 'Alle' && v > 0).length}
+              </div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Listenpreis-Summe</div>
+              <div className="stat-value">
+                {fmtPrice(totalValue)}<span className="currency">€</span>
+              </div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Ø Preis</div>
+              <div className="stat-value">
+                {items.length ? fmtPrice(totalValue / items.length) : '—'}
+                {items.length > 0 && <span className="currency">€</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="filters">
+            <div className="tabs">
+              {['Alle', ...KATEGORIEN].map(k => (
+                <button
+                  key={k}
+                  className={`tab ${filterKat === k ? 'active' : ''}`}
+                  onClick={() => setFilterKat(k)}
+                >
+                  {k}<span className="tab-count">{counts[k] || 0}</span>
+                </button>
+              ))}
+            </div>
+            <div className="search">
+              <span className="search-icon">⌕</span>
+              <input
+                placeholder="Suchen…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th className={`sortable ${sortBy === 'id' ? 'active-sort' : ''}`}
+                      onClick={() => toggleSort('id')} style={{width: 70}}>
+                    ID <span className="sort-indicator">{sortArrow('id')}</span>
+                  </th>
+                  <th style={{width: 70, textAlign: 'center'}}>Icon</th>
+                  <th className={`sortable ${sortBy === 'name' ? 'active-sort' : ''}`}
+                      onClick={() => toggleSort('name')}>
+                    Name <span className="sort-indicator">{sortArrow('name')}</span>
+                  </th>
+                  <th className={`sortable ${sortBy === 'kategorie' ? 'active-sort' : ''}`}
+                      onClick={() => toggleSort('kategorie')} style={{width: 140}}>
+                    Kategorie <span className="sort-indicator">{sortArrow('kategorie')}</span>
+                  </th>
+                  <th className={`sortable ${sortBy === 'preis' ? 'active-sort' : ''}`}
+                      onClick={() => toggleSort('preis')} style={{width: 110, textAlign: 'right'}}>
+                    Preis <span className="sort-indicator">{sortArrow('preis')}</span>
+                  </th>
+                  <th style={{width: 60}}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {view.length === 0 && !adding && (
+                  <tr><td colSpan="6">
+                    <div className="empty">
+                      <div className="empty-icon">🍨</div>
+                      <div className="empty-title">Keine Artikel gefunden</div>
+                      <div>Filter zurücksetzen oder neuen Artikel anlegen.</div>
+                    </div>
+                  </td></tr>
+                )}
+
+                {view.map(item => (
+                  <Row key={item.id} item={item}
+                       editing={editing} setEditing={setEditing}
+                       updateItem={updateItem} deleteItem={deleteItem}
+                       setPicker={setPicker} />
+                ))}
+
+                {adding && (
+                  <tr className="add-row">
+                    <td className="cell-id">neu</td>
+                    <td>
+                      <button
+                        type="button"
+                        className={`icon-trigger ${!newItem.icon ? 'empty' : ''}`}
+                        onClick={(e) => setPicker({ kind: 'new', anchorEl: e.currentTarget })}
+                        title="Symbol wählen"
+                      >
+                        {newItem.icon || '＋'}
+                      </button>
+                    </td>
+                    <td>
+                      <input className="inline-input" autoFocus
+                             value={newItem.name}
+                             onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') commitNew();
+                               else if (e.key === 'Escape') setAdding(false);
+                             }}
+                             placeholder="Artikelname" />
+                    </td>
+                    <td>
+                      <select className="inline-select"
+                              value={newItem.kategorie}
+                              onChange={(e) => setNewItem({...newItem, kategorie: e.target.value})}>
+                        {KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <input className="inline-input mono" style={{textAlign: 'right'}}
+                             value={newItem.preis}
+                             onChange={(e) => setNewItem({...newItem, preis: e.target.value})}
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') commitNew();
+                               else if (e.key === 'Escape') setAdding(false);
+                             }}
+                             placeholder="0,00" />
+                    </td>
+                    <td>
+                      <div style={{display: 'flex', gap: 4, justifyContent: 'flex-end'}}>
+                        <button className="icon-btn success" onClick={commitNew} title="Hinzufügen (Enter)">✓</button>
+                        <button className="icon-btn danger" onClick={() => setAdding(false)} title="Abbrechen (Esc)">✕</button>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{marginTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'}}>
+            <div className="hint">
+              <span><kbd>Klick</kbd> Zelle bearbeiten</span>
+              <span><kbd>Enter</kbd> übernehmen</span>
+              <span><kbd>Esc</kbd> abbrechen</span>
+              <span><kbd>Ctrl+S</kbd> speichern</span>
+              <span><kbd>Ctrl+N</kbd> neu</span>
+            </div>
+            {!adding && (
+              <button className="btn btn-primary" onClick={() => setAdding(true)}>
+                + Neuer Artikel
+              </button>
+            )}
+          </div>
+
+          {picker && (
+            <EmojiPicker
+              anchorEl={picker.anchorEl}
+              value={picker.kind === 'edit'
+                ? (items.find(i => i.id === picker.id)?.icon || '')
+                : newItem.icon}
+              onSelect={(emoji) => {
+                if (picker.kind === 'new') {
+                  setNewItem(prev => ({ ...prev, icon: emoji }));
+                } else {
+                  updateItem(picker.id, 'icon', emoji);
+                }
+              }}
+              onClose={() => setPicker(null)}
+            />
+          )}
+
+          {toast && <div className={`toast ${toast.kind}`}>{toast.msg}</div>}
+        </div>
+      );
+    }
+
+    /* ============================ Row ============================ */
+    function Row({ item, editing, setEditing, updateItem, deleteItem, setPicker }) {
+      const isEditing = (field) => editing && editing.id === item.id && editing.field === field;
+      const startEdit = (field) => setEditing({ id: item.id, field });
+      const commit = (field, value) => { updateItem(item.id, field, value); setEditing(null); };
+      const cancel = () => setEditing(null);
+
+      const onKey = (field) => (e) => {
+        if (e.key === 'Enter') commit(field, e.target.value);
+        else if (e.key === 'Escape') cancel();
+      };
+
+      return (
+        <tr className="row">
+          {/* ID */}
+          <td className="cell-id">
+            {isEditing('id') ? (
+              <input className="inline-input mono" autoFocus defaultValue={item.id}
+                onKeyDown={onKey('id')}
+                onBlur={(e) => commit('id', e.target.value)} />
+            ) : (
+              <span className="cell-edit" onClick={() => startEdit('id')}>{item.id}</span>
+            )}
+          </td>
+
+          {/* Icon — oeffnet Emoji-Picker */}
+          <td>
+            <button
+              type="button"
+              className="cell-edit cell-icon"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%' }}
+              onClick={(e) => {
+                setEditing(null);
+                setPicker({ kind: 'edit', id: item.id, anchorEl: e.currentTarget });
+              }}
+              title="Symbol ändern"
+            >
+              {item.icon}
+            </button>
+          </td>
+
+          {/* Name */}
+          <td>
+            {isEditing('name') ? (
+              <input className="inline-input" autoFocus defaultValue={item.name}
+                onKeyDown={onKey('name')}
+                onBlur={(e) => commit('name', e.target.value)} />
+            ) : (
+              <span className="cell-edit" onClick={() => startEdit('name')}>{item.name}</span>
+            )}
+          </td>
+
+          {/* Kategorie */}
+          <td>
+            {isEditing('kategorie') ? (
+              <select className="inline-select" autoFocus defaultValue={item.kategorie}
+                onChange={(e) => commit('kategorie', e.target.value)}
+                onBlur={(e) => commit('kategorie', e.target.value)}>
+                {KATEGORIEN.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            ) : (
+              <span className="cell-edit" onClick={() => startEdit('kategorie')}>
+                <span className={`badge badge-${item.kategorie}`}>{item.kategorie}</span>
+              </span>
+            )}
+          </td>
+
+          {/* Preis */}
+          <td className="cell-price">
+            {isEditing('preis') ? (
+              <input className="inline-input mono" style={{textAlign: 'right'}}
+                autoFocus defaultValue={fmtPrice(item.preis)}
+                onKeyDown={onKey('preis')}
+                onBlur={(e) => commit('preis', e.target.value)} />
+            ) : (
+              <span className="cell-edit" style={{textAlign: 'right'}} onClick={() => startEdit('preis')}>
+                {fmtPrice(item.preis)} €
+              </span>
+            )}
+          </td>
+
+          {/* Aktionen */}
+          <td>
+            <div className="row-actions">
+              <button className="icon-btn danger" onClick={() => deleteItem(item.id)} title="Löschen">✕</button>
+            </div>
+          </td>
+        </tr>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
