@@ -18,6 +18,6 @@
     { "id": 31, "kategorie": "Getränk", "name": "Cappuccino", "preis": 3.20, "icon": "☕" },
     { "id": 32, "kategorie": "Getränk", "name": "Wasser", "preis": 2.50, "icon": "💧" },
     { "id": 33, "kategorie": "Getränk", "name": "Cola", "preis": 2.80, "icon": "🥤" },
-    { "id": 34, "kategorie": "Becher", "name": "RwBecher", "preis": 3.99, "icon": "🌺" }
+    { "id": 34, "kategorie": "Becher", "name": "RwBecher", "preis": 4.88, "icon": "🌺" }
   ]
 }
